@@ -2,8 +2,8 @@ name: Run YouTube Analytics
 
 on:
   schedule:
-    # 매일 오후 1시 25분 (한국 시간)
-    - cron: "25 4 * * *"
+    # 매 5분마다 실행
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       channel_id:
@@ -86,4 +86,4 @@ jobs:
           echo "✅ YouTube Analytics 실행 완료!"
           echo "📊 실행 시간: $(date)"
           echo "🌍 GitHub Actions에서 실행됨"
-          echo "📅 다음 실행: 내일 오후 1시 25분 (한국 시간)"
+          echo "📅 다음 실행: 5분 후"

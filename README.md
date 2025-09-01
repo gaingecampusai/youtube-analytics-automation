@@ -113,7 +113,7 @@ GitHub 저장소의 **Settings** → **Secrets and variables** → **Actions**�
 
 ### 2단계: 자동 실행
 
-- **매일 오후 1시 25분** (한국 시간)에 자동 실행
+- **매 5분마다** 자동 실행
 - GitHub Actions 탭에서 수동으로 워크플로우를 실행할 수 있습니다
 - 실행 결과는 GitHub Actions 아티팩트로 저장됩니다
 
@@ -194,13 +194,13 @@ HttpError: 404 Not Found
 
 ## 📅 스케줄링
 
-기본적으로 매일 오후 1시 25분 (한국 시간)에 실행됩니다.
+기본적으로 매 5분마다 실행됩니다.
 
 스케줄 변경은 `.github/workflows/run_analytics.yml` 파일의 `cron` 설정을 수정하세요:
 
 ```yaml
 schedule:
-  - cron: "25 4 * * *" # 매일 오후 1시 25분 (UTC 4:25)
+  - cron: "*/5 * * * *" # 매 5분마다
 ```
 
 ## 🔍 로그 확인
