@@ -49,6 +49,7 @@ secrets/
 !requirements.txt
 !package.json
 !package-lock.json
+ACTUAL_TOKENS.md
 
 # Logs
 *.log
