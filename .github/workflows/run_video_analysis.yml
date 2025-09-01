@@ -1,0 +1,87 @@
+name: Run YouTube Video Analysis
+
+on:
+  schedule:
+    # 매 10분마다 실행
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      channel_id:
+        description: "YouTube Channel ID (선택사항)"
+        required: false
+        default: ""
+      sheet_id:
+        description: "Google Sheet ID (선택사항)"
+        required: false
+        default: ""
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  run-video-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create secrets directory
+        run: |
+          mkdir -p secrets
+
+      - name: Setup OAuth credentials
+        run: |
+          echo '${{ secrets.CLIENT_SECRET_JSON }}' > secrets/client_secret.json
+          echo '${{ secrets.TOKEN_YOUTUBE_JSON }}' > secrets/token_youtube.json
+          echo '${{ secrets.TOKEN_SHEETS_JSON }}' > secrets/token_sheets.json
+
+      - name: Set environment variables
+        run: |
+          echo "ENV=github" >> $GITHUB_ENV
+          echo "NON_INTERACTIVE=true" >> $GITHUB_ENV
+          echo "USE_DUAL_TOKENS=true" >> $GITHUB_ENV
+          echo "BASE_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "CLIENT_SECRET_FILE=$(pwd)/secrets/client_secret.json" >> $GITHUB_ENV
+          echo "TOKEN_YOUTUBE=$(pwd)/secrets/token_youtube.json" >> $GITHUB_ENV
+          echo "TOKEN_SHEETS=$(pwd)/secrets/token_sheets.json" >> $GITHUB_ENV
+          if [ -n "${{ inputs.channel_id }}" ]; then
+            echo "CHANNEL_ID=${{ inputs.channel_id }}" >> $GITHUB_ENV
+          fi
+          if [ -n "${{ inputs.sheet_id }}" ]; then
+            echo "SHEET_ID=${{ inputs.sheet_id }}" >> $GITHUB_ENV
+          fi
+
+      - name: Run YouTube Video Analysis
+        run: |
+          python yt_video_analysis.py
+
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: video-analysis-results
+          path: |
+            *.log
+            *.csv
+            *.json
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "✅ YouTube 영상별 분석 실행 완료!"
+          echo "📊 실행 시간: $(date)"
+          echo "🌍 GitHub Actions에서 실행됨"
+          echo "📅 다음 실행: 10분 후"
+          echo "📋 분석 내용:"
+          echo "   - 롱폼 영상: 영상 제목, 업로드일, 조회수, 좋아요, 댓글"
+          echo "   - 숏폼 영상: 영상 제목, 업로드일, 조회수, 좋아요, 댓글"
