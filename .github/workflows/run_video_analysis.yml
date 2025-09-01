@@ -2,8 +2,8 @@ name: Run YouTube Video Analysis
 
 on:
   schedule:
-    # 매 10분마다 실행
-    - cron: "*/10 * * * *"
+    # 매일 오전 9시 (KST) 실행
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       channel_id:
@@ -58,12 +58,12 @@ jobs:
             echo "CHANNEL_ID=${{ inputs.channel_id }}" >> $GITHUB_ENV
           fi
           if [ -n "${{ inputs.sheet_id }}" ]; then
-            echo "SHEET_ID=${{ inputs.sheet_id }}" >> $GITHUB_ENV
+            echo "SPREADSHEET_ID=${{ inputs.sheet_id }}" >> $GITHUB_ENV
           fi
 
       - name: Run YouTube Video Analysis
         run: |
-          python yt_video_analysis.py
+          python yt_video_analysis_fixed.py
 
       - name: Upload results as artifacts
         uses: actions/upload-artifact@v4
@@ -81,7 +81,7 @@ jobs:
           echo "✅ YouTube 영상별 분석 실행 완료!"
           echo "📊 실행 시간: $(date)"
           echo "🌍 GitHub Actions에서 실행됨"
-          echo "📅 다음 실행: 10분 후"
+          echo "📅 다음 실행: 내일 오전 9시 (KST)"
           echo "📋 분석 내용:"
-          echo "   - 롱폼 영상: 영상 제목, 업로드일, 조회수, 좋아요, 댓글"
-          echo "   - 숏폼 영상: 영상 제목, 업로드일, 조회수, 좋아요, 댓글"
+          echo "   - 롱폼 영상 TOP 20개: 영상 제목, 업로드일, 조회수, 좋아요, 댓글, 시청 유지율"
+          echo "   - 숏폼 영상 TOP 20개: 영상 제목, 업로드일, 조회수, 좋아요, 댓글, 시청 유지율"
