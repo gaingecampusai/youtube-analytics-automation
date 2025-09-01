@@ -1,0 +1,97 @@
+name: Run Instagram Analytics
+
+on:
+  schedule:
+    # 매월 1일 오전 9시 (KST) 실행
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "분석할 연도 (선택사항)"
+        required: false
+        default: ""
+      month:
+        description: "분석할 월 (선택사항)"
+        required: false
+        default: ""
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  run-instagram-analytics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create secrets directory
+        run: |
+          mkdir -p secrets
+
+      - name: Setup OAuth credentials
+        run: |
+          echo '${{ secrets.CLIENT_SECRET_JSON }}' > secrets/client_secret.json
+          echo '${{ secrets.TOKEN_SHEETS_JSON }}' > secrets/token_sheets.json
+
+      - name: Set environment variables
+        run: |
+          echo "ENV=github" >> $GITHUB_ENV
+          echo "NON_INTERACTIVE=true" >> $GITHUB_ENV
+          echo "BASE_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "CLIENT_SECRET_FILE=$(pwd)/secrets/client_secret.json" >> $GITHUB_ENV
+          echo "TOKEN_SHEETS=$(pwd)/secrets/token_sheets.json" >> $GITHUB_ENV
+          echo "FACEBOOK_APP_ID=${{ secrets.FACEBOOK_APP_ID }}" >> $GITHUB_ENV
+          echo "FACEBOOK_APP_SECRET=${{ secrets.FACEBOOK_APP_SECRET }}" >> $GITHUB_ENV
+          echo "FACEBOOK_ACCESS_TOKEN=${{ secrets.FACEBOOK_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          echo "INSTAGRAM_BUSINESS_ACCOUNT_ID=${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}" >> $GITHUB_ENV
+          if [ -n "${{ inputs.year }}" ]; then
+            echo "ANALYSIS_YEAR=${{ inputs.year }}" >> $GITHUB_ENV
+          fi
+          if [ -n "${{ inputs.month }}" ]; then
+            echo "ANALYSIS_MONTH=${{ inputs.month }}" >> $GITHUB_ENV
+          fi
+
+      - name: Run Instagram Analytics
+        run: |
+          if [ -n "$ANALYSIS_YEAR" ] && [ -n "$ANALYSIS_MONTH" ]; then
+            python -c "import os; from instagram_monthly_report import InstagramMonthlyReport; report = InstagramMonthlyReport(); report.run_monthly_report(year=int(os.getenv('ANALYSIS_YEAR')), month=int(os.getenv('ANALYSIS_MONTH')))"
+          else
+            python instagram_monthly_report.py
+          fi
+
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: instagram-analytics-results
+          path: |
+            *.log
+            *.csv
+            *.json
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "✅ Instagram 월간 분석 실행 완료!"
+          echo "📊 실행 시간: $(date)"
+          echo "🌍 GitHub Actions에서 실행됨"
+          echo "📅 다음 실행: 다음달 1일 오전 9시 (KST)"
+          echo "📋 분석 내용:"
+          echo "   - 총 게시물 업로드 수"
+          echo "   - 현재 팔로워 수"
+          echo "   - 새 팔로워 수(전달대비)"
+          echo "   - 좋아요 최고 수"
+          echo "   - 총 공유수"
+          echo "   - 릴스 평균 조회수"
+          echo "   - 프로필 클릭"
