@@ -2,88 +2,88 @@ name: Run YouTube Analytics
 
 on:
   schedule:
-    # 매일 오후 1시 15분 (한국 시간)
-    - cron: '15 4 * * *'
+    # 매일 오후 1시 25분 (한국 시간)
+    - cron: "25 4 * * *"
   workflow_dispatch:
     inputs:
       channel_id:
-        description: 'YouTube Channel ID (선택사항)'
+        description: "YouTube Channel ID (선택사항)"
         required: false
-        default: ''
+        default: ""
       sheet_id:
-        description: 'Google Sheet ID (선택사항)'
+        description: "Google Sheet ID (선택사항)"
         required: false
-        default: ''
+        default: ""
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: "3.11"
 
 jobs:
   run-analytics:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install dependencies
-      run: |
-        cd channel_analytics
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          cd channel_analytics
+          pip install -r requirements.txt
 
-    - name: Create secrets directory
-      run: |
-        cd channel_analytics
-        mkdir -p secrets
+      - name: Create secrets directory
+        run: |
+          cd channel_analytics
+          mkdir -p secrets
 
-    - name: Setup OAuth credentials
-      run: |
-        cd channel_analytics
-        echo '${{ secrets.CLIENT_SECRET_JSON }}' > secrets/client_secret.json
-        echo '${{ secrets.TOKEN_YOUTUBE_JSON }}' > secrets/token_youtube.json
-        echo '${{ secrets.TOKEN_SHEETS_JSON }}' > secrets/token_sheets.json
+      - name: Setup OAuth credentials
+        run: |
+          cd channel_analytics
+          echo '${{ secrets.CLIENT_SECRET_JSON }}' > secrets/client_secret.json
+          echo '${{ secrets.TOKEN_YOUTUBE_JSON }}' > secrets/token_youtube.json
+          echo '${{ secrets.TOKEN_SHEETS_JSON }}' > secrets/token_sheets.json
 
-    - name: Set environment variables
-      run: |
-        cd channel_analytics
-        echo "ENV=github" >> $GITHUB_ENV
-        echo "NON_INTERACTIVE=true" >> $GITHUB_ENV
-        echo "USE_DUAL_TOKENS=true" >> $GITHUB_ENV
-        echo "BASE_DIR=$(pwd)" >> $GITHUB_ENV
-        echo "CLIENT_SECRET_FILE=$(pwd)/secrets/client_secret.json" >> $GITHUB_ENV
-        echo "TOKEN_YOUTUBE=$(pwd)/secrets/token_youtube.json" >> $GITHUB_ENV
-        echo "TOKEN_SHEETS=$(pwd)/secrets/token_sheets.json" >> $GITHUB_ENV
-        if [ -n "${{ inputs.channel_id }}" ]; then
-          echo "CHANNEL_ID=${{ inputs.channel_id }}" >> $GITHUB_ENV
-        fi
-        if [ -n "${{ inputs.sheet_id }}" ]; then
-          echo "SHEET_ID=${{ inputs.sheet_id }}" >> $GITHUB_ENV
-        fi
+      - name: Set environment variables
+        run: |
+          cd channel_analytics
+          echo "ENV=github" >> $GITHUB_ENV
+          echo "NON_INTERACTIVE=true" >> $GITHUB_ENV
+          echo "USE_DUAL_TOKENS=true" >> $GITHUB_ENV
+          echo "BASE_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "CLIENT_SECRET_FILE=$(pwd)/secrets/client_secret.json" >> $GITHUB_ENV
+          echo "TOKEN_YOUTUBE=$(pwd)/secrets/token_youtube.json" >> $GITHUB_ENV
+          echo "TOKEN_SHEETS=$(pwd)/secrets/token_sheets.json" >> $GITHUB_ENV
+          if [ -n "${{ inputs.channel_id }}" ]; then
+            echo "CHANNEL_ID=${{ inputs.channel_id }}" >> $GITHUB_ENV
+          fi
+          if [ -n "${{ inputs.sheet_id }}" ]; then
+            echo "SHEET_ID=${{ inputs.sheet_id }}" >> $GITHUB_ENV
+          fi
 
-    - name: Run YouTube Analytics
-      run: |
-        cd channel_analytics
-        python yt_monthly_report.py
+      - name: Run YouTube Analytics
+        run: |
+          cd channel_analytics
+          python yt_monthly_report.py
 
-    - name: Upload results as artifacts
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: analytics-results
-        path: |
-          channel_analytics/*.log
-          channel_analytics/*.csv
-          channel_analytics/*.json
-        retention-days: 30
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: analytics-results
+          path: |
+            channel_analytics/*.log
+            channel_analytics/*.csv
+            channel_analytics/*.json
+          retention-days: 30
 
-    - name: Summary
-      run: |
-        echo "✅ YouTube Analytics 실행 완료!"
-        echo "📊 실행 시간: $(date)"
-        echo "🌍 GitHub Actions에서 실행됨"
-        echo "📅 다음 실행: 내일 오후 1시 15분 (한국 시간)"
+      - name: Summary
+        run: |
+          echo "✅ YouTube Analytics 실행 완료!"
+          echo "📊 실행 시간: $(date)"
+          echo "🌍 GitHub Actions에서 실행됨"
+          echo "📅 다음 실행: 내일 오후 1시 25분 (한국 시간)"
